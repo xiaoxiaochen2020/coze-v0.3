@@ -1,5 +1,6 @@
 // =============================================================
-// My Agent WebUI v0.3
+// My Agent WebUI v0.3.1
+// 修复：v0.3.1 modal [hidden] 用 [hidden] CSS 规则 + ESC 关闭 + api() 错误带 statusText
 // =============================================================
 
 const $  = (s) => document.querySelector(s);
@@ -49,8 +50,23 @@ async function api(path, opts={}) {
     headers: {"Content-Type": "application/json"},
     ...opts,
   });
-  if (!r.ok) throw new Error("HTTP " + r.status);
+  if (!r.ok) {
+    let detail = "";
+    try { detail = (await r.text()).slice(0, 200); } catch {}
+    throw new Error(`HTTP ${r.status} ${r.statusText}${detail ? " — " + detail : ""}`);
+  }
   return r.json();
+}
+
+// ESC 关闭所有 modal
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    for (const m of $$(".modal")) m.hidden = true;
+  }
+});
+// 点遮罩关闭 modal
+for (const m of $$(".modal")) {
+  m.addEventListener("click", (e) => { if (e.target === m) m.hidden = true; });
 }
 
 // =============================================================
