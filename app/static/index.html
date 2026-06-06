@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>My Agent</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+
+<!-- ① 顶栏 -->
+<header class="topbar">
+  <button class="topbar-fold" id="btn-fold" title="折叠侧栏">☰</button>
+  <div class="topbar-logo">My Agent</div>
+  <div class="topbar-search">
+    <span class="search-ico">🔍</span>
+    <input id="search" placeholder="搜索你想要的一切..." />
+    <span class="search-kbd">⌘ K</span>
+  </div>
+  <button class="topbar-bell" title="提醒">🔔</button>
+  <div class="topbar-avatar" title="用户"></div>
+</header>
+
+<div class="layout">
+
+  <!-- ② 左侧栏（深色） -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-brand">My Agent</div>
+
+    <!-- 工作空间分区 -->
+    <div class="sb-section">
+      <div class="sb-section-title">工作空间</div>
+      <div class="sb-projects" id="sb-projects">
+        <!-- JS 渲染：项目列表 + "+ 创建新项目" -->
+      </div>
+    </div>
+
+    <!-- 我的分区 -->
+    <div class="sb-section">
+      <div class="sb-section-title">我的</div>
+      <nav class="sb-nav" id="sb-nav">
+        <!-- JS 渲染：6 项（智能体/应用/知识库/工作流/插件/第三方 API 设置） -->
+      </nav>
+    </div>
+  </aside>
+
+  <!-- ============== 视图：欢迎页（默认） ============== -->
+  <main class="main welcome" id="view-welcome">
+    <div class="welcome-inner">
+      <h1 class="welcome-title">What can I help you with?</h1>
+      <p class="welcome-sub">Start with a project or chat with your AI assistant</p>
+      <div class="welcome-input">
+        <button class="wi-attach" title="上传文件">+</button>
+        <textarea id="welcome-text" rows="1" placeholder="问我任何问题..."></textarea>
+        <button class="wi-send" id="welcome-send" title="发送">↗</button>
+      </div>
+      <div class="welcome-chips">
+        <span class="chip-label">💡 试试这些提示：</span>
+        <button class="chip" data-prompt="/ 写邮件">/ 写邮件</button>
+        <button class="chip" data-prompt="/ 翻译">/ 翻译</button>
+        <button class="chip" data-prompt="/ 写代码">/ 写代码</button>
+        <button class="chip" data-prompt="/ 总结">/ 总结</button>
+      </div>
+      <div class="welcome-disclaimer">Your AI can make mistakes. Check important info.</div>
+    </div>
+  </main>
+
+  <!-- ============== 视图：项目列表 ============== -->
+  <main class="main" id="view-projects" hidden>
+    <div class="page-bar">
+      <div class="page-title">项目</div>
+      <div class="page-sub">这里 <span id="proj-count">0</span> 个项目</div>
+      <span class="spacer"></span>
+      <button class="btn-orange" id="btn-create">+ 立即创建</button>
+    </div>
+    <div class="grid" id="grid"></div>
+  </main>
+
+  <!-- ============== 视图：占位列表（智能体/应用/知识库/工作流/插件） ============== -->
+  <main class="main" id="view-placeholder" hidden>
+    <div class="page-bar">
+      <div class="page-title" id="ph-title">分类</div>
+      <div class="page-sub" id="ph-sub">（v0.3 占位）</div>
+    </div>
+    <div class="grid" id="ph-grid">
+      <div class="card card-empty">
+        <div class="card-empty-ico">📦</div>
+        <div class="card-empty-text">该分类暂未实现<br><span class="muted">v0.3 仅「项目」和「第三方 API 设置」可用</span></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ============== 视图：第三方 API 设置 ============== -->
+  <main class="main" id="view-apikeys" hidden>
+    <div class="page-bar">
+      <div>
+        <div class="page-title">第三方 API 设置</div>
+        <div class="page-sub">请填写以下信息接入第三方 LLM 服务</div>
+      </div>
+      <span class="spacer"></span>
+      <a href="#" class="api-help" id="lnk-api-help">什么是第三方 API？</a>
+      <button class="btn-orange" id="btn-add-key">+ 添加 API</button>
+    </div>
+    <div class="api-table-wrap">
+      <table class="api-table" id="api-table">
+        <thead>
+          <tr>
+            <th style="width:18%">API 名称</th>
+            <th style="width:18%">服务商</th>
+            <th style="width:28%">API Key</th>
+            <th style="width:12%">状态</th>
+            <th style="width:24%">操作</th>
+          </tr>
+        </thead>
+        <tbody id="api-tbody"></tbody>
+      </table>
+    </div>
+    <div class="api-footer">
+      <span class="api-count" id="api-count">共 0 条</span>
+      <div class="api-pager"><span class="muted">5 条/页</span></div>
+    </div>
+  </main>
+
+  <!-- ============== 视图：聊天 ============== -->
+  <main class="main chat-main" id="view-chat" hidden>
+    <div class="chat-header">
+      <button class="btn-ghost" id="btn-back">← 返回</button>
+      <div class="chat-title" id="chat-title">项目</div>
+      <div class="chat-backend" id="chat-backend">OpenClaw 默认</div>
+      <button class="btn-ghost" id="btn-bind-key">🔑 切换模型</button>
+    </div>
+    <div class="chat-body" id="chat-body"></div>
+    <div class="chat-input">
+      <textarea id="chat-text" rows="2" placeholder="输入消息，回车发送，Shift+回车换行"></textarea>
+      <button class="btn-orange" id="btn-send">发送</button>
+    </div>
+  </main>
+</div>
+
+<!-- ⑤ 底部黑条 -->
+<footer class="footer">
+  <span>My Agent v0.3</span>
+  <span class="spacer"></span>
+  <span id="status-info">就绪</span>
+  <span class="sep"></span>
+  <span>OpenClaw · 18789</span>
+  <span class="sep"></span>
+  <span>WebUI · 8765</span>
+</footer>
+
+<!-- ========== 弹窗 1：新建项目（含 API Key 绑定） ========== -->
+<div class="modal" id="modal-create" hidden>
+  <div class="modal-card">
+    <h3>新建项目</h3>
+    <label>项目名<input id="f-name" placeholder="给项目起个名字" autofocus></label>
+    <label>描述（可选）<textarea id="f-desc" rows="3" placeholder="一句话说明这个项目做什么"></textarea></label>
+    <label>对话模型
+      <select id="f-api-key">
+        <option value="">OpenClaw 默认（gpt-5.5）</option>
+      </select>
+    </label>
+    <div class="modal-hint muted">先在「第三方 API 设置」里加 Key，才能选到第三方模型</div>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="btn-cancel">取消</button>
+      <button class="btn-orange" id="btn-submit">创建</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 弹窗 2：添加/修改 API Key ========== -->
+<div class="modal" id="modal-key" hidden>
+  <div class="modal-card">
+    <h3 id="key-modal-title">添加 API</h3>
+    <label>API 名称<input id="kf-name" placeholder="如：通义千问 主力"></label>
+    <label>服务商
+      <select id="kf-provider"></select>
+    </label>
+    <label>API Key
+      <input id="kf-key" type="password" placeholder="sk-..." />
+    </label>
+    <div class="modal-hint muted">Key 仅存本机（data/api_keys.json），前端永远返回脱敏</div>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="kf-test">测试连接</button>
+      <span class="spacer"></span>
+      <button class="btn-ghost" id="kf-cancel">取消</button>
+      <button class="btn-orange" id="kf-save">保存</button>
+    </div>
+    <div class="modal-test-result" id="kf-test-result" hidden></div>
+  </div>
+</div>
+
+<!-- ========== 弹窗 3：切换项目模型 ========== -->
+<div class="modal" id="modal-bind" hidden>
+  <div class="modal-card">
+    <h3>切换对话模型</h3>
+    <label>当前项目<div class="bind-proj" id="bind-proj"></div></label>
+    <label>对话模型
+      <select id="bf-key">
+        <option value="">OpenClaw 默认（gpt-5.5）</option>
+      </select>
+    </label>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="bf-cancel">取消</button>
+      <button class="btn-orange" id="bf-save">保存</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
