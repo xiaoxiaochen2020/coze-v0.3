@@ -1,7 +1,9 @@
 /* ============================================================
- * My Agent WebUI v0.3
+ * My Agent WebUI v0.3.1
  * 风格：现代化 AI 助手（类 ChatGPT/Claude）+ 深色侧栏 + 紫色 accent
+ * 修复：v0.3.1 modal [hidden] 无效 + ESC 关闭 + cache buster
  * ============================================================ */
+[hidden] { display: none !important; }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
