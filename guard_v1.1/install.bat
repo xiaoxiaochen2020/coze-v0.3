@@ -17,7 +17,7 @@ if not exist "%BASE_DIR%" mkdir "%BASE_DIR%"
 
 if not exist "%PYTHON_EXE%" (
     echo [ERR] Python not found at %PYTHON_EXE%
-    pause
+REM pause
     exit /b 1
 )
 echo [OK] Python: %PYTHON_EXE%
@@ -25,7 +25,7 @@ echo [OK] Python: %PYTHON_EXE%
 
 if not exist "claw_bridge_guard.py" (
     echo [ERR] claw_bridge_guard.py not found in current dir
-    pause
+REM pause
     exit /b 1
 )
 copy /Y "claw_bridge_guard.py" "%GUARD_PY%" >nul
@@ -74,7 +74,7 @@ schtasks /create ^
     /f
 if %errorlevel% neq 0 (
     echo [ERR] schtasks /create failed
-    pause
+REM pause
     exit /b 1
 )
 echo [OK] Task "%TASK_NAME%" created
