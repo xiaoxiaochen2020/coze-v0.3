@@ -96,4 +96,4 @@ echo.
 echo NOTE: %TASK_NAME% scheduled task reads GITHUB_PAT user env var
 echo       setx was used; if guard cannot push, re-login Windows first.
 echo.
-pause
+
