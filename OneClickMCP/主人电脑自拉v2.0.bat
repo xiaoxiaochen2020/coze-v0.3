@@ -62,8 +62,8 @@ for %%F in (
 echo.
 echo === 完成 ===
 echo  接下来 3 步:
-echo   1. 一次性设 GH_PAT (新 cmd 跑, PAT 在 SECRET.md):
-echo      setx GH_PAT "YOUR_GH_PAT_HERE"
+echo   1. 一次性设 GH_PAT (新 cmd 跑, PAT 主 Agent 端给):
+echo      setx GH_PAT "PASTE_PAT_FROM_AGENT"
 echo   2. 打 EXE: 双击 C:\coze-scheduler\OneClickMCP\build_oneclick.bat
 echo   3. 启 EXE: 双击桌面 运行OneClickMCP.bat
 echo.
