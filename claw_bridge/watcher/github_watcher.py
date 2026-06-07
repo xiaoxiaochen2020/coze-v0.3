@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-github_watcher.py - claw_bridge add-on v1.0
+github_watcher.py v1.1 - claw_bridge add-on
 Watch GitHub repo public API for new .bat/.cmd in pending_trigger/
 Pull to C:\\coze-scheduler\\claw_bridge\\pending\\
+Use PowerShell Invoke-WebRequest (TLS 1.2 compatible) via subprocess
 NO PAT needed (public repo)
 """
 import os
 import sys
 import time
 import json
+import subprocess
 import urllib.request
 import urllib.error
 
@@ -62,15 +64,17 @@ def save_state(seen):
 
 
 def list_trigger_files():
-    """List .bat/.cmd files in TRIGGER_DIR via GitHub Contents API."""
+    """List .bat/.cmd files in TRIGGER_DIR via GitHub Contents API (urllib)."""
     req = urllib.request.Request(
         API_URL,
-        headers={"User-Agent": "claw-github-watcher/1.0"},
+        headers={"User-Agent": "claw-github-watcher/1.1"},
     )
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
             data = json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return []  # path not exist yet, normal
         log(f"api http {e.code}: {e.reason}")
         return []
     except Exception as e:
@@ -84,25 +88,36 @@ def list_trigger_files():
                  or item.get("name", "").endswith(".cmd"))]
 
 
-def pull_file(name):
-    """Download file from raw.githubusercontent.com to PENDING_DIR."""
+def pull_file_ps(name):
+    """Download file via PowerShell Invoke-WebRequest (TLS 1.2 friendly)."""
     url = RAW_URL + "/" + name
-    dst = os.path.join(PENDING_DIR, name)
+    dst = os.path.join(PENDING_DIR, name).replace("\\", "\\\\")
+    ps_cmd = (
+        f"try {{ "
+        f"Invoke-WebRequest -Uri '{url}' -OutFile '{dst}' -UseBasicParsing; "
+        f"Write-Output ('OK_' + (Get-Item '{dst}').Length) "
+        f"}} catch {{ "
+        f"Write-Output ('FAIL_' + $_.Exception.Message) "
+        f"}}"
+    )
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "claw-github-watcher/1.0"})
-        with urllib.request.urlopen(req, timeout=20) as resp:
-            content = resp.read()
-        with open(dst, "wb") as f:
-            f.write(content)
-        log(f"pulled: {name} ({len(content)} bytes)")
-        return True
+        result = subprocess.run(
+            ["powershell", "-NoProfile", "-Command", ps_cmd],
+            capture_output=True, text=True, timeout=30,
+        )
+        out = (result.stdout or "").strip()
+        if out.startswith("OK_"):
+            size = int(out[3:])
+            log(f"pulled: {name} ({size} bytes)")
+            return True
+        log(f"ps pull fail {name}: {out}")
+        return False
     except Exception as e:
-        log(f"pull err {name}: {e}")
+        log(f"subprocess err {name}: {e}")
         return False
 
 
 def is_already_running():
-    """Avoid double-launch via lock file."""
     lock = r"C:\coze-scheduler\claw_bridge\watcher.lock"
     if os.path.exists(lock):
         try:
@@ -145,7 +160,7 @@ def main():
                 name = item.get("name", "")
                 if not name or name in seen:
                     continue
-                if pull_file(name):
+                if pull_file_ps(name):
                     seen.add(name)
             if files:
                 save_state(seen)
